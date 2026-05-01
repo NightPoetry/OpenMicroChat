@@ -26,7 +26,8 @@ class TagsModule {
     const tags = this.store.getState().tags || [];
     const selected = this.store.getState().selectedTags || [];
 
-    if (tags.length === 0) {
+    const user = this.store.getState().user;
+    if (!user) {
       bar.innerHTML = '';
       bar.style.display = 'none';
       return;

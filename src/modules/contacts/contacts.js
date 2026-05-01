@@ -199,7 +199,6 @@ class ContactsModule {
   }
 
   showTagSheet(contact, anchor) {
-    // Remove existing
     document.querySelector('.tag-sheet-overlay')?.remove();
 
     const allTags = this.store.getState().tags || [];
@@ -210,14 +209,21 @@ class ContactsModule {
 
     const rect = anchor.getBoundingClientRect();
     const sheetX = Math.min(rect.left, window.innerWidth - 260);
-    const sheetY = rect.bottom + 4;
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const sheetY = spaceBelow > 240 ? rect.bottom + 4 : Math.max(8, rect.top - 240);
 
-    overlay.innerHTML = `
-      <div class="tag-sheet" style="left:${sheetX}px;top:${sheetY}px">
+    const renderSheet = () => {
+      const currentTags = this.store.getState().tags || [];
+      const currentContactTags = this.store.getState().contacts.find(c => c.id === contact.id)?.tags || [];
+
+      const sheet = overlay.querySelector('.tag-sheet');
+      if (!sheet) return;
+
+      sheet.innerHTML = `
         <div class="tag-sheet-title">标签</div>
         <div class="tag-sheet-list">
-          ${allTags.map(tag => {
-            const active = contactTags.includes(tag.id);
+          ${currentTags.map(tag => {
+            const active = currentContactTags.includes(tag.id);
             return `
               <button class="tag-sheet-item ${active ? 'active' : ''}" data-tag-id="${tag.id}" style="--tag-color:${tag.color}">
                 <span class="tag-sheet-dot"></span>
@@ -226,21 +232,89 @@ class ContactsModule {
               </button>
             `;
           }).join('')}
+          <button class="tag-sheet-item tag-sheet-create" id="tag-sheet-create">
+            <span class="tag-sheet-dot" style="background:var(--color-text-secondary)">+</span>
+            <span>新建标签</span>
+          </button>
         </div>
-      </div>
-    `;
+        <div class="tag-sheet-inline-create" id="tag-sheet-inline-create" style="display:none">
+          <input type="text" class="tag-sheet-input" id="tag-sheet-new-name" placeholder="标签名称" maxlength="10" autocomplete="off">
+          <div class="tag-sheet-color-row" id="tag-sheet-colors"></div>
+          <div class="tag-sheet-inline-actions">
+            <button class="tag-sheet-inline-btn cancel" id="tag-sheet-cancel-create">取消</button>
+            <button class="tag-sheet-inline-btn confirm" id="tag-sheet-confirm-create">创建并添加</button>
+          </div>
+        </div>
+      `;
 
+      // Toggle existing tags
+      sheet.querySelectorAll('.tag-sheet-item[data-tag-id]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          this.toggleContactTag(contact, btn.dataset.tagId);
+          renderSheet();
+          this.events.emit('tags:render');
+        });
+      });
+
+      // Show inline create form
+      sheet.querySelector('#tag-sheet-create')?.addEventListener('click', () => {
+        this.showInlineTagCreate(sheet, contact, overlay, renderSheet);
+      });
+    };
+
+    overlay.innerHTML = `<div class="tag-sheet" style="left:${sheetX}px;top:${sheetY}px"></div>`;
     document.body.appendChild(overlay);
+    renderSheet();
 
     overlay.addEventListener('click', (e) => {
-      if (e.target === overlay) { overlay.remove(); return; }
-      const btn = e.target.closest('.tag-sheet-item');
-      if (!btn) return;
-
-      const tagId = btn.dataset.tagId;
-      this.toggleContactTag(contact, tagId);
-      overlay.remove();
+      if (e.target === overlay) overlay.remove();
     });
+  }
+
+  showInlineTagCreate(sheet, contact, overlay, renderSheet) {
+    const createBtn = sheet.querySelector('#tag-sheet-create');
+    const inlineForm = sheet.querySelector('#tag-sheet-inline-create');
+    if (createBtn) createBtn.style.display = 'none';
+    if (inlineForm) inlineForm.style.display = 'block';
+
+    const colors = ['#007aff', '#34c759', '#ff9500', '#5856d6', '#ff2d55', '#00c7be', '#ff6482', '#bf5af2'];
+    let selectedColor = colors[Math.floor(Math.random() * colors.length)];
+
+    const colorRow = sheet.querySelector('#tag-sheet-colors');
+    if (colorRow) {
+      colorRow.innerHTML = colors.map(c =>
+        `<button class="tag-color-dot ${c === selectedColor ? 'active' : ''}" data-color="${c}" style="background:${c}"></button>`
+      ).join('');
+
+      colorRow.addEventListener('click', (e) => {
+        const dot = e.target.closest('.tag-color-dot');
+        if (!dot) return;
+        selectedColor = dot.dataset.color;
+        colorRow.querySelectorAll('.tag-color-dot').forEach(d => d.classList.remove('active'));
+        dot.classList.add('active');
+      });
+    }
+
+    const nameInput = sheet.querySelector('#tag-sheet-new-name');
+    nameInput?.focus();
+
+    const doCreate = () => {
+      const name = nameInput?.value?.trim();
+      if (!name) return;
+
+      const newTag = { id: 't' + Date.now(), name, color: selectedColor };
+      const tags = [...(this.store.getState().tags || []), newTag];
+      this.store.setState({ tags });
+      this.storage.set('tags', tags);
+
+      this.toggleContactTag(contact, newTag.id);
+      this.events.emit('tags:render');
+      renderSheet();
+    };
+
+    nameInput?.addEventListener('keypress', (e) => { if (e.key === 'Enter') doCreate(); });
+    sheet.querySelector('#tag-sheet-confirm-create')?.addEventListener('click', doCreate);
+    sheet.querySelector('#tag-sheet-cancel-create')?.addEventListener('click', renderSheet);
   }
 
   toggleContactTag(contact, tagId) {

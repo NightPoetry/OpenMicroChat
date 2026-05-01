@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
-    "build": "echo 'Build completed'",
+    "tauri": "tauri",
+    "build": "bash scripts/build-frontend.sh",
     "test": "echo 'No tests specified'",
     "lint": "eslint ."
   },

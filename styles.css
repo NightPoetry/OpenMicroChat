@@ -74,6 +74,12 @@ body {
     overflow: hidden;
     height: 100vh;
     height: 100dvh;
+    padding-top: env(safe-area-inset-top, 0);
+    padding-bottom: env(safe-area-inset-bottom, 0);
+    padding-left: env(safe-area-inset-left, 0);
+    padding-right: env(safe-area-inset-right, 0);
+    -webkit-user-select: none;
+    user-select: none;
 }
 
 /* ==============================
@@ -682,6 +688,8 @@ body {
 
 .message-bubble p {
     margin: 0;
+    -webkit-user-select: text;
+    user-select: text;
 }
 
 .message-meta {
@@ -758,6 +766,14 @@ body {
 
 .message-input::placeholder {
     color: var(--color-text-secondary);
+}
+
+.message-input,
+.form-input,
+.tag-sheet-input,
+.search-box input {
+    -webkit-user-select: text;
+    user-select: text;
 }
 
 .send-btn {
@@ -1658,6 +1674,103 @@ body {
     margin-left: auto;
     color: var(--tag-color);
     font-weight: 600;
+}
+
+.tag-sheet-create .tag-sheet-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: none !important;
+    border: 1.5px dashed var(--color-text-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    line-height: 1;
+    color: var(--color-text-secondary);
+}
+
+.tag-sheet-inline-create {
+    padding: 8px;
+    border-top: 1px solid var(--color-border);
+    margin-top: 4px;
+}
+
+.tag-sheet-input {
+    width: 100%;
+    padding: 6px 10px;
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    font-size: 14px;
+    background: var(--color-input-bg);
+    color: var(--color-text);
+    outline: none;
+    font-family: inherit;
+    margin-bottom: 8px;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.tag-sheet-input:focus {
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 2px var(--color-accent-bg);
+}
+
+.tag-sheet-color-row {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+}
+
+.tag-color-dot {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    cursor: pointer;
+    padding: 0;
+    transition: all var(--transition);
+}
+
+.tag-color-dot:hover {
+    transform: scale(1.15);
+}
+
+.tag-color-dot.active {
+    border-color: var(--color-text);
+    box-shadow: 0 0 0 1.5px var(--color-surface);
+}
+
+.tag-sheet-inline-actions {
+    display: flex;
+    gap: 6px;
+}
+
+.tag-sheet-inline-btn {
+    flex: 1;
+    padding: 6px 0;
+    border: none;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all var(--transition);
+}
+
+.tag-sheet-inline-btn.cancel {
+    background: var(--color-hover);
+    color: var(--color-text-secondary);
+}
+
+.tag-sheet-inline-btn.confirm {
+    background: var(--color-accent);
+    color: #fff;
+}
+
+.tag-sheet-inline-btn.confirm:hover {
+    background: var(--color-accent-hover);
 }
 
 /* ==============================

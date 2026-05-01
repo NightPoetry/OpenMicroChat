@@ -4,3 +4,5 @@ db.json
 .DS_Store
 uploads/
 *.log
+dist/
+src-tauri/target/
