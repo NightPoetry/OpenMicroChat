@@ -154,22 +154,69 @@ class ContactsModule {
     let timer = null;
     let startX = 0, startY = 0;
     let fired = false;
+    let ring = null;
+
+    const DURATION = 500;
+    const CIRCUMFERENCE = 2 * Math.PI * 23; // r=23
+
+    const showRing = (clientX, clientY) => {
+      ring?.remove();
+      const rect = element.getBoundingClientRect();
+      const relX = clientX - rect.left;
+      const relY = clientY - rect.top;
+      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      svg.classList.add('long-press-ring');
+      svg.setAttribute('width', '52');
+      svg.setAttribute('height', '52');
+      svg.setAttribute('viewBox', '0 0 52 52');
+      svg.style.left = `${relX - 26}px`;
+      svg.style.top = `${relY - 26}px`;
+      const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      circle.setAttribute('cx', '26');
+      circle.setAttribute('cy', '26');
+      circle.setAttribute('r', '23');
+      circle.setAttribute('fill', 'none');
+      circle.setAttribute('stroke', 'var(--color-accent)');
+      circle.setAttribute('stroke-width', '3');
+      circle.setAttribute('stroke-linecap', 'round');
+      circle.setAttribute('stroke-dasharray', CIRCUMFERENCE);
+      circle.setAttribute('stroke-dashoffset', CIRCUMFERENCE);
+      circle.style.transform = 'rotate(-90deg)';
+      circle.style.transformOrigin = '26px 26px';
+      circle.style.animation = `long-press-ring ${DURATION}ms linear forwards`;
+      svg.appendChild(circle);
+      element.appendChild(svg);
+      ring = svg;
+    };
+
+    const removeRing = (immediate) => {
+      if (!ring) return;
+      const el = ring;
+      ring = null;
+      if (immediate) { el.remove(); return; }
+      el.style.transition = 'opacity 150ms ease';
+      el.style.opacity = '0';
+      setTimeout(() => el.remove(), 150);
+    };
 
     const start = (x, y) => {
       startX = x;
       startY = y;
       fired = false;
       element.style.transition = 'transform 200ms ease';
+      showRing(x, y);
       timer = setTimeout(() => {
         fired = true;
+        removeRing(false);
         element.style.transform = 'scale(0.97)';
         setTimeout(() => { element.style.transform = ''; }, 150);
-        this.showTagSheet(contact, element);
-      }, 500);
+        this.showTagSheet(contact, startX, startY);
+      }, DURATION);
     };
 
     const cancel = () => {
       clearTimeout(timer);
+      removeRing(false);
       element.style.transform = '';
     };
 
@@ -198,7 +245,7 @@ class ContactsModule {
     }, { passive: true });
   }
 
-  showTagSheet(contact, anchor) {
+  showTagSheet(contact, pressX, pressY) {
     document.querySelector('.tag-sheet-overlay')?.remove();
 
     const allTags = this.store.getState().tags || [];
@@ -207,10 +254,15 @@ class ContactsModule {
     const overlay = document.createElement('div');
     overlay.className = 'tag-sheet-overlay';
 
-    const rect = anchor.getBoundingClientRect();
-    const sheetX = Math.min(rect.left, window.innerWidth - 260);
-    const spaceBelow = window.innerHeight - rect.bottom;
-    const sheetY = spaceBelow > 240 ? rect.bottom + 4 : Math.max(8, rect.top - 240);
+    const sheetW = 240;
+    const margin = 8;
+    const sheetX = pressX + sheetW + margin > window.innerWidth
+      ? Math.max(margin, pressX - sheetW)
+      : pressX + margin;
+    const flipUp = pressY + 200 > window.innerHeight;
+    const sheetPos = flipUp
+      ? `left:${sheetX}px;top:auto;bottom:${window.innerHeight - pressY + margin}px`
+      : `left:${sheetX}px;top:${pressY + margin}px`;
 
     const renderSheet = () => {
       const currentTags = this.store.getState().tags || [];
@@ -262,7 +314,7 @@ class ContactsModule {
       });
     };
 
-    overlay.innerHTML = `<div class="tag-sheet" style="left:${sheetX}px;top:${sheetY}px"></div>`;
+    overlay.innerHTML = `<div class="tag-sheet" style="${sheetPos}"></div>`;
     document.body.appendChild(overlay);
     renderSheet();
 

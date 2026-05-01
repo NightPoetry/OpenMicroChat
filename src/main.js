@@ -10,6 +10,7 @@ import ContactsModule from './modules/contacts/contacts.js';
 import ChatModule from './modules/chat/chat.js';
 import SettingsModule from './modules/settings/settings.js';
 import TagsModule from './modules/tags/tags.js';
+import { initRipple } from './modules/utils/ripple.js';
 
 class App {
   constructor() {
@@ -49,6 +50,7 @@ class App {
     this.loadSettings();
     this.bindGlobalEvents();
     this.setupMobileNavigation();
+    initRipple();
   }
 
   loadSettings() {
