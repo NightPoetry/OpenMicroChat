@@ -1125,7 +1125,25 @@ body {
 .user-menu-email {
     font-size: 13px;
     color: var(--color-text-secondary);
+    margin-bottom: 4px;
+}
+
+.user-menu-server {
+    font-size: 11px;
+    color: var(--color-accent);
+    margin-bottom: 20px;
+    word-break: break-all;
+    opacity: 0.7;
+}
+
+.user-menu-email:last-of-type:not(:has(+ .user-menu-server)) {
     margin-bottom: 24px;
+}
+
+.auth-server-toggle {
+    margin-top: 8px;
+    font-size: 12px;
+    opacity: 0.6;
 }
 
 .user-menu-actions {
