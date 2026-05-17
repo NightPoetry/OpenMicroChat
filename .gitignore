@@ -6,3 +6,6 @@ uploads/
 *.log
 dist/
 src-tauri/target/
+
+# AI assistant local notice
+AI_NOTICE.md
